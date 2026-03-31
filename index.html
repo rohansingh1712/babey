@@ -53,21 +53,28 @@
     }
 
     .rules-link {
-      position: fixed;
-      left: 40px;
-      bottom: 40px;
-      font-size: 20px;
+      font-size: 12px;
       font-weight: 600;
       color: #adb5bd;
       text-decoration: none;
       cursor: pointer;
-      transition: color 0.2s;
-      max-width: 240px;
+      transition: all 0.2s;
       line-height: 1.4;
+      padding: 4px 10px;
+      border: 1px solid rgba(108, 117, 125, 0.3);
+      border-radius: 6px;
+      background: rgba(33, 37, 41, 0.5);
+      text-align: left;
+      display: inline-block;
+      white-space: nowrap;
+      align-self: flex-start;
+      pointer-events: auto;
     }
 
     .rules-link:hover {
       color: #f8f9fa;
+      border-color: rgba(173, 181, 189, 0.5);
+      background: rgba(33, 37, 41, 0.7);
     }
 
     .modal-buttons {
@@ -277,8 +284,56 @@
       cursor: none !important;
     }
 
+    /* Mobile Controls */
+    .mobile-controls {
+      display: none;
+      position: fixed;
+      bottom: 2.5vh;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .control-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .control-btn {
+      width: 50px;
+      height: 50px;
+      font-size: 28px;
+      background: #495057;
+      color: #f8f9fa;
+      border: 2px solid #6c757d;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Crimson Text', serif;
+      font-weight: 700;
+      transition: all 0.1s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .control-btn:active {
+      background: #6c757d;
+      transform: scale(0.95);
+    }
+
     /* Mobile Styles */
     @media (max-width: 768px) {
+      /* Show mobile controls */
+      .mobile-controls {
+        display: flex;
+      }
+
       /* Move HUD above maze instead of left side */
       .hud-container {
         left: 50%;
@@ -307,12 +362,9 @@
 
       /* Adjust rules link for mobile */
       .rules-link {
-        left: 50%;
-        bottom: 60px;
-        transform: translateX(-50%);
-        font-size: 18px;
+        font-size: 14px;
         text-align: center;
-        max-width: 90vw;
+        align-self: center;
       }
 
       /* Make modals fit on mobile */
@@ -409,8 +461,7 @@
       }
 
       .rules-link {
-        font-size: 16px;
-        bottom: 50px;
+        font-size: 12px;
       }
 
       .modal {
@@ -452,11 +503,10 @@
   <canvas id="gameCanvas"></canvas>
 
   <div class="hud-container">
-    <div class="hud-subtitle">Living with a 3 month old and trying to do things.</div>
     <div class="hud" id="dayCounter">Day 1</div>
+    <div class="hud-subtitle">Living with a 3 month old and trying to do things.</div>
+    <a class="rules-link" id="rulesLink">Don't cheat</a>
   </div>
-
-  <a class="rules-link" id="rulesLink">Don't cheat</a>
 
   <button class="settings-btn" id="settingsBtn">⚙️</button>
 
@@ -549,6 +599,18 @@
 
   <div class="fire-progress" id="fireProgress" style="display: none;"></div>
   <div class="custom-cursor" id="customCursor">🪣</div>
+
+  <!-- Mobile Controls -->
+  <div class="mobile-controls">
+    <div class="control-row">
+      <button class="control-btn" id="btnUp">↑</button>
+    </div>
+    <div class="control-row">
+      <button class="control-btn" id="btnLeft">←</button>
+      <button class="control-btn" id="btnDown">↓</button>
+      <button class="control-btn" id="btnRight">→</button>
+    </div>
+  </div>
 
   <script>
     // ========================================
@@ -1169,6 +1231,67 @@
       }
     });
 
+    // Touch event support for mobile
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault(); // Prevent scrolling
+      if (gameState.paused) return;
+
+      const touch = e.touches[0];
+      gameState.mouseX = touch.clientX;
+      gameState.mouseY = touch.clientY;
+
+      if (!gameState.waterBucket.active) {
+        activateWaterBucket();
+      } else {
+        // Check if water is depleted and refill
+        if (gameState.waterBucket.usedTime >= CONFIG.WATER_DURATION_MS) {
+          gameState.waterBucket.usedTime = 0; // Refill
+        }
+      }
+      gameState.dragging = true;
+
+      // Set mouseMoving flag for touch
+      gameState.mouseMoving = true;
+      clearTimeout(gameState.mouseMoveTimeout);
+      gameState.mouseMoveTimeout = setTimeout(() => {
+        gameState.mouseMoving = false;
+      }, 50);
+
+      updateCustomCursor(touch.clientX, touch.clientY);
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // Prevent scrolling
+      if (gameState.paused) return;
+
+      const touch = e.touches[0];
+      gameState.mouseX = touch.clientX;
+      gameState.mouseY = touch.clientY;
+
+      // Set mouseMoving flag and clear after brief delay
+      gameState.mouseMoving = true;
+      clearTimeout(gameState.mouseMoveTimeout);
+      gameState.mouseMoveTimeout = setTimeout(() => {
+        gameState.mouseMoving = false;
+      }, 50);
+
+      updateCustomCursor(touch.clientX, touch.clientY);
+    });
+
+    canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      gameState.dragging = false;
+
+      // Don't reset fire hold time - let progress accumulate across refills
+
+      // Deactivate bucket if water is depleted
+      if (gameState.waterBucket.active) {
+        if (gameState.waterBucket.usedTime >= CONFIG.WATER_DURATION_MS) {
+          deactivateWaterBucket();
+        }
+      }
+    });
+
     document.getElementById('resumeBtn').addEventListener('click', resumeDay);
     document.getElementById('playAgainBtn').addEventListener('click', restartGame);
 
@@ -1209,6 +1332,23 @@
       if (e.target.id === 'settingsOverlay') {
         closeSettings();
       }
+    });
+
+    // Mobile control buttons
+    document.getElementById('btnUp').addEventListener('click', () => {
+      if (!gameState.paused) movePlayer(0, -1);
+    });
+
+    document.getElementById('btnDown').addEventListener('click', () => {
+      if (!gameState.paused) movePlayer(0, 1);
+    });
+
+    document.getElementById('btnLeft').addEventListener('click', () => {
+      if (!gameState.paused) movePlayer(-1, 0);
+    });
+
+    document.getElementById('btnRight').addEventListener('click', () => {
+      if (!gameState.paused) movePlayer(1, 0);
     });
 
     // ========================================
