@@ -236,16 +236,19 @@
     }
 
     .fire-progress {
-      position: absolute;
+      position: fixed;
       background: #343a40;
       border: 2px solid #6c757d;
       border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 12px;
-      font-weight: 600;
+      padding: 6px 12px;
+      font-size: 16px;
+      font-weight: 700;
       color: #f8f9fa;
       pointer-events: none;
       white-space: nowrap;
+      transform: translate(-50%, -100%);
+      margin-top: -10px;
+      z-index: 1000;
     }
 
     .custom-cursor {
@@ -272,6 +275,176 @@
 
     body.bucket-active * {
       cursor: none !important;
+    }
+
+    /* Mobile Styles */
+    @media (max-width: 768px) {
+      /* Move HUD above maze instead of left side */
+      .hud-container {
+        left: 50%;
+        top: 60px;
+        transform: translateX(-50%);
+        text-align: center;
+        gap: 8px;
+      }
+
+      .hud {
+        font-size: 18px;
+        text-align: center;
+      }
+
+      .hud-subtitle {
+        font-size: 16px;
+        text-align: center;
+        max-width: 90vw;
+        line-height: 1.3;
+      }
+
+      .hud-timer {
+        font-size: 18px;
+        text-align: center;
+      }
+
+      /* Adjust rules link for mobile */
+      .rules-link {
+        left: 50%;
+        bottom: 60px;
+        transform: translateX(-50%);
+        font-size: 18px;
+        text-align: center;
+        max-width: 90vw;
+      }
+
+      /* Make modals fit on mobile */
+      .modal {
+        padding: 24px;
+        margin: 20px;
+        max-width: calc(100vw - 40px);
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+      }
+
+      .modal h1 {
+        font-size: 36px;
+        margin-bottom: 20px;
+        line-height: 1.1;
+      }
+
+      .modal p {
+        font-size: 16px;
+        margin-bottom: 20px;
+      }
+
+      .modal button {
+        font-size: 20px;
+        padding: 14px 28px;
+      }
+
+      /* Modal buttons stack on mobile */
+      .modal-buttons {
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .modal-buttons button {
+        width: 100%;
+      }
+
+      /* Rules modal adjustments */
+      #rulesOverlay .modal h1 {
+        font-size: 32px;
+        margin-bottom: 20px;
+      }
+
+      #rulesOverlay .modal > div {
+        font-size: 16px !important;
+        line-height: 1.6 !important;
+      }
+
+      #rulesOverlay .modal p {
+        font-size: 16px;
+        margin-bottom: 16px;
+      }
+
+      /* Custom cursor smaller on mobile */
+      .custom-cursor {
+        font-size: 36px;
+      }
+
+      /* Settings panel adjustments */
+      .settings-panel {
+        padding: 20px;
+        margin: 20px;
+        max-width: calc(100vw - 40px);
+        max-height: calc(100vh - 40px);
+      }
+
+      .settings-panel h2 {
+        font-size: 20px;
+      }
+
+      .setting-item label {
+        font-size: 13px;
+      }
+
+      .setting-item input {
+        font-size: 14px;
+        padding: 6px 10px;
+      }
+    }
+
+    /* Extra small mobile devices */
+    @media (max-width: 480px) {
+      .hud-container {
+        top: 50px;
+      }
+
+      .hud-subtitle {
+        font-size: 14px;
+      }
+
+      .hud {
+        font-size: 16px;
+      }
+
+      .rules-link {
+        font-size: 16px;
+        bottom: 50px;
+      }
+
+      .modal {
+        padding: 20px;
+        margin: 10px;
+        max-width: calc(100vw - 20px);
+      }
+
+      .modal h1 {
+        font-size: 28px;
+        margin-bottom: 16px;
+      }
+
+      .modal button {
+        font-size: 18px;
+        padding: 12px 24px;
+      }
+
+      #rulesOverlay .modal h1 {
+        font-size: 26px;
+      }
+
+      #rulesOverlay .modal > div {
+        font-size: 14px !important;
+      }
+
+      #rulesOverlay .modal p {
+        font-size: 14px;
+        margin-bottom: 14px;
+      }
+
+      .custom-cursor {
+        font-size: 28px;
+      }
     }
   </style>
 </head>
@@ -308,11 +481,11 @@
     <div class="modal">
       <h1 style="font-size: 48px; margin-bottom: 30px;">How to Play</h1>
       <div style="text-align: left; max-width: 700px; margin: 0 auto; font-size: 18px; line-height: 1.8; color: #dee2e6;">
-        <p style="margin-bottom: 20px;"><strong style="color: #f8f9fa;">Goal:</strong> Drive your car 🚗 from home to the grocery store 🏪</p>
+        <p style="margin-bottom: 20px;"><strong style="color: #f8f9fa;">Goal:</strong> Drive your car 🚗 from home to the grocery store 🏪 through the maze</p>
         <p style="margin-bottom: 20px;"><strong style="color: #f8f9fa;">Move:</strong> Use arrow keys to navigate through the maze</p>
         <p style="margin-bottom: 20px;"><strong style="color: #f8f9fa;">Fires:</strong> Fires 🔥 spawn randomly every 1-10 seconds at levels 1-5. They level up every 5 seconds if ignored.</p>
-        <p style="margin-bottom: 20px;"><strong style="color: #f8f9fa;">Extinguish:</strong> Click anywhere to activate your water bucket 🪣 (lasts 2 seconds). Drag over fires to put them out. Higher level fires need more swipes.</p>
-        <p style="margin-bottom: 20px;"><strong style="color: #f8f9fa;">Vision:</strong> Each fire level reduces your maze and car visibility by 30%. At level 4+, you're nearly blind!</p>
+        <p style="margin-bottom: 20px;"><strong style="color: #f8f9fa;">Extinguish:</strong> Click anywhere to activate your water bucket 🪣 (lasts 5 seconds). Click and hold directly on fires to put them out. Higher level fires take longer (Level 1: 2s, Level 2: 3s, Level 5: 6s). Your progress persists—refill your bucket and continue where you left off!</p>
+        <p style="margin-bottom: 20px;"><strong style="color: #f8f9fa;">Visual Feedback:</strong> Fires fade as you extinguish them. Each fire level also reduces your maze and car visibility by 30%. At level 4+, you're nearly blind!</p>
         <p style="margin-bottom: 20px;"><strong style="color: #f8f9fa;">Time:</strong> You have 1 minute per day. If time runs out, you sleep and wake up to try again from where you left off.</p>
         <p style="margin-bottom: 30px;"><strong style="color: #f8f9fa;">Days:</strong> Each new day is a fresh attempt. Your maze position carries over until you reach the store.</p>
       </div>
@@ -488,6 +661,33 @@
         }
       }
 
+      // Make maze easier by removing random walls to create shortcuts (20% of walls)
+      const wallsToRemove = Math.floor(size * size * 0.2);
+      for (let i = 0; i < wallsToRemove; i++) {
+        const x = Math.floor(Math.random() * size);
+        const y = Math.floor(Math.random() * size);
+
+        // Randomly choose a wall direction to remove
+        const direction = Math.floor(Math.random() * 4);
+        if (direction === 0 && y > 0) {
+          // Remove top wall
+          maze[y][x].top = false;
+          maze[y-1][x].bottom = false;
+        } else if (direction === 1 && x < size-1) {
+          // Remove right wall
+          maze[y][x].right = false;
+          maze[y][x+1].left = false;
+        } else if (direction === 2 && y < size-1) {
+          // Remove bottom wall
+          maze[y][x].bottom = false;
+          maze[y+1][x].top = false;
+        } else if (direction === 3 && x > 0) {
+          // Remove left wall
+          maze[y][x].left = false;
+          maze[y][x-1].right = false;
+        }
+      }
+
       return maze;
     }
 
@@ -545,7 +745,8 @@
         x: offsetX + Math.random() * mazeWidth,
         y: offsetY + Math.random() * mazeHeight,
         level: randomLevel,
-        swipesRemaining: 50 + (randomLevel - 1) * 20,
+        holdTime: 0,
+        requiredHoldTime: 2000 + (randomLevel - 1) * 1000, // 2s base + 1s per level
         shakeOffset: 0
       };
 
@@ -558,7 +759,7 @@
       gameState.fireLevelUpTimer = setTimeout(() => {
         if (gameState.fire && gameState.fire.level < 10 && !gameState.paused) {
           gameState.fire.level++;
-          gameState.fire.swipesRemaining = 50 + (gameState.fire.level - 1) * 20;
+          gameState.fire.requiredHoldTime = 2000 + (gameState.fire.level - 1) * 1000;
           scheduleFireLevelUp();
           updateHUD();
         }
@@ -707,10 +908,17 @@
       const shakeSpeed = 10 + level * 2;
       fire.shakeOffset = Math.sin(Date.now() / shakeSpeed) * amplitude;
 
+      // Calculate opacity based on extinguishing progress (10% increments)
+      const progress = (fire.holdTime / fire.requiredHoldTime) * 100;
+      const opacityStep = Math.floor(progress / 10); // 0, 1, 2, 3... 9, 10
+      const opacity = Math.max(0, 1.0 - (opacityStep * 0.1)); // 1.0, 0.9, 0.8... 0.1, 0.0
+
+      ctx.globalAlpha = opacity;
       ctx.font = `${fontSize}px serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('🔥', fire.x + fire.shakeOffset, fire.y);
+      ctx.globalAlpha = 1.0; // Reset alpha
     }
 
     // ========================================
@@ -741,13 +949,13 @@
         const waterDepleted = usedTime >= CONFIG.WATER_DURATION_MS;
 
         if (waterDepleted && gameState.dragging) {
-          // Show REFILL! text when water runs out during drag
+          // Show REFILL! text when water runs out during hold
           cursor.textContent = 'REFILL!';
           cursor.style.fontSize = '20px';
           cursor.style.transform = 'translate(-50%, -50%) scale(1)';
         } else {
-          // Show bucket with water drop when actively moving while dragging
-          if (gameState.dragging && gameState.mouseMoving) {
+          // Show bucket with water drop when holding (dragging)
+          if (gameState.dragging) {
             cursor.textContent = '💧🪣';
           } else {
             cursor.textContent = '🪣';
@@ -756,8 +964,8 @@
           const progress = Math.max(0, 1 - usedTime / CONFIG.WATER_DURATION_MS);
           const scale = 0.5 + (progress * 0.5); // Scale from 100% to 50%
 
-          // Add rotation when actively dragging
-          const rotation = (gameState.dragging && gameState.mouseMoving) ? 'rotate(-25deg)' : '';
+          // Add rotation when holding (dragging)
+          const rotation = gameState.dragging ? 'rotate(-25deg)' : '';
           cursor.style.transform = `translate(-50%, -50%) scale(${scale}) ${rotation}`;
         }
       } else {
@@ -772,13 +980,8 @@
       // The bucket stays active but won't extinguish fires when depleted
     }
 
-    function handleFireDrag(x, y) {
-      if (!gameState.fire || !gameState.waterBucket.active || !gameState.dragging) return;
-
-      // Check if water is depleted
-      if (gameState.waterBucket.usedTime >= CONFIG.WATER_DURATION_MS) {
-        return; // Water depleted, can't extinguish fire
-      }
+    function isMouseOverFire(x, y) {
+      if (!gameState.fire) return false;
 
       const fire = gameState.fire;
       const level = fire.level;
@@ -789,13 +992,9 @@
       const dy = y - fire.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (distance <= hitRadius) {
-        fire.swipesRemaining--;
-        if (fire.swipesRemaining <= 0) {
-          extinguishFire();
-        }
-      }
+      return distance <= hitRadius;
     }
+
 
     // ========================================
     // TIMER & DAY SYSTEM
@@ -926,7 +1125,6 @@
         }
       }
       gameState.dragging = true;
-      handleFireDrag(e.clientX, e.clientY);
     });
 
     canvas.addEventListener('mousemove', (e) => {
@@ -942,9 +1140,6 @@
 
       if (gameState.paused) return;
       updateCustomCursor(e.clientX, e.clientY);
-      if (gameState.dragging) {
-        handleFireDrag(e.clientX, e.clientY);
-      }
     });
 
     window.addEventListener('mousemove', (e) => {
@@ -963,6 +1158,8 @@
 
     canvas.addEventListener('mouseup', () => {
       gameState.dragging = false;
+
+      // Don't reset fire hold time - let progress accumulate across refills
 
       // Deactivate bucket if water is depleted
       if (gameState.waterBucket.active) {
@@ -1024,9 +1221,25 @@
       if (!gameState.paused) {
         updateTimer(deltaTime);
 
-        // Track water usage only when moving
-        if (gameState.waterBucket.active && gameState.dragging && gameState.mouseMoving) {
+        // Track water usage when holding (dragging)
+        if (gameState.waterBucket.active && gameState.dragging) {
           gameState.waterBucket.usedTime += deltaTime;
+        }
+
+        // Track fire hold time when holding over fire with water bucket
+        if (gameState.fire && gameState.waterBucket.active && gameState.dragging) {
+          // Check if water is not depleted
+          if (gameState.waterBucket.usedTime < CONFIG.WATER_DURATION_MS) {
+            // Check if cursor is over fire
+            if (isMouseOverFire(gameState.mouseX, gameState.mouseY)) {
+              gameState.fire.holdTime += deltaTime;
+
+              // Check if fire should be extinguished
+              if (gameState.fire.holdTime >= gameState.fire.requiredHoldTime) {
+                extinguishFire();
+              }
+            }
+          }
         }
 
         checkWaterBucketExpiry();
