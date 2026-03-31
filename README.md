@@ -19,7 +19,7 @@ The game is designed to be difficult and frustrating in ways that resemble the e
 
 ### Core Loop
 1. **Navigate** a 40×40 maze using arrow keys
-2. **Extinguish fires** by clicking to activate water bucket and dragging over fires
+2. **Extinguish fires** by clicking to activate water bucket and holding on fires
 3. **Reach the grocery store** before time runs out
 4. **Wake up** and continue from same position if time expires
 
@@ -27,19 +27,27 @@ The game is designed to be difficult and frustrating in ways that resemble the e
 - **Spawn frequency**: Random (1-10 seconds between fires)
 - **Initial level**: Random (1-5)
 - **Level progression**: Increases every 5 seconds if not extinguished
-- **Extinguish mechanic**: Swipe-based (50 + (level-1) × 20 swipes required)
-- **Visual impact**: Each level reduces maze/car opacity by 30%
+- **Extinguish mechanic**: Click-and-hold (base 2s + 1s per level)
+  - Level 1: 2 seconds of holding
+  - Level 2: 3 seconds of holding
+  - Level 5: 6 seconds of holding
+- **Progress persistence**: Extinguishing progress accumulates across water bucket refills
+- **Visual impact**:
+  - Each fire level reduces maze/car opacity by 30%
+  - Fire opacity reduces in 10% increments as it's extinguished (stepped visual feedback)
 
 ### Resources
-- **Water bucket**: Lasts 2 seconds per activation
+- **Water bucket**: Lasts 5 seconds per activation
 - **Time per day**: 1 minute
 - **Movement**: Instant cell-to-cell navigation
 
 ### Visual Feedback
 - Car shakes after 2 seconds of idleness
 - Fire size and shake intensity increase with level
+- Fire fades in 10% steps as it's being put out (0%, 10%, 20%... 100%)
 - Maze/car fade as fire levels increase
 - Water bucket shrinks as it depletes
+- Bucket tilts with water drop icon when holding
 
 ## 🛠 Tech Stack
 
@@ -65,7 +73,7 @@ The game is designed to be difficult and frustrating in ways that resemble the e
   MAZE_SIZE: 40,              // Grid dimensions
   FIRE_INTERVAL_MS: 5000,     // Base spawn interval
   FIRE_LEVEL_UP_INTERVAL_MS: 5000,
-  WATER_DURATION_MS: 2000,    // Bucket duration
+  WATER_DURATION_MS: 5000,    // Bucket duration (5 seconds)
   DAY_DURATION_MS: 60000,     // 1 minute per day
   BASE_FIRE_SIZE_PX: 48,
   FIRE_SIZE_INCREMENT_PX: 20,
@@ -87,7 +95,8 @@ Holds all mutable game data:
 
 1. **Maze Generation** (`generateMaze()`)
    - Recursive backtracker (DFS) algorithm
-   - Generates perfect mazes (one solution path)
+   - Post-processing: Removes 20% of walls to create shortcuts
+   - Creates multiple paths and loops for easier navigation
 
 2. **Rendering** (`render()`, `renderMaze()`, `renderPlayer()`, `renderFire()`)
    - Canvas-based drawing
@@ -97,7 +106,8 @@ Holds all mutable game data:
 3. **Fire Management** (`spawnFire()`, `scheduleFireLevelUp()`, `extinguishFire()`)
    - Random spawn timing and levels
    - Auto-leveling with timers
-   - Swipe-based extinguishing
+   - Click-and-hold extinguishing with persistent progress
+   - Opacity reduction in 10% steps as fire is extinguished
 
 4. **Input Handling**
    - Keyboard: Arrow keys for movement
