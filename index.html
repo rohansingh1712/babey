@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>The Long Day</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,6 +18,7 @@
       font-family: 'Crimson Text', serif;
       overflow: hidden;
       background: #212529;
+      touch-action: manipulation;
     }
 
     #gameCanvas {
@@ -1002,8 +1003,13 @@
 
     function updateCustomCursor(x, y) {
       const cursor = document.getElementById('customCursor');
+
+      // Offset cursor upward on mobile/touch so it's visible above finger
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const yOffset = isTouchDevice ? -40 : 0;
+
       cursor.style.left = `${x}px`;
-      cursor.style.top = `${y}px`;
+      cursor.style.top = `${y + yOffset}px`;
 
       // Check if water has run out
       if (gameState.waterBucket.active) {
@@ -1233,10 +1239,16 @@
 
     // Touch event support for mobile
     canvas.addEventListener('touchstart', (e) => {
+      // Check if touch is on a control button - if so, don't handle it here
+      const touch = e.touches[0];
+      const target = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (target && target.classList.contains('control-btn')) {
+        return; // Let the button handle it
+      }
+
       e.preventDefault(); // Prevent scrolling
       if (gameState.paused) return;
 
-      const touch = e.touches[0];
       gameState.mouseX = touch.clientX;
       gameState.mouseY = touch.clientY;
 
@@ -1261,10 +1273,16 @@
     });
 
     canvas.addEventListener('touchmove', (e) => {
+      // Check if touch is on a control button
+      const touch = e.touches[0];
+      const target = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (target && target.classList.contains('control-btn')) {
+        return;
+      }
+
       e.preventDefault(); // Prevent scrolling
       if (gameState.paused) return;
 
-      const touch = e.touches[0];
       gameState.mouseX = touch.clientX;
       gameState.mouseY = touch.clientY;
 
