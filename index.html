@@ -250,7 +250,7 @@
 
     .custom-cursor {
       position: fixed;
-      font-size: 32px;
+      font-size: 48px;
       pointer-events: none;
       z-index: 1000;
       display: none;
@@ -385,7 +385,7 @@
       MAZE_SIZE: 40,
       FIRE_INTERVAL_MS: 5000,
       FIRE_LEVEL_UP_INTERVAL_MS: 5000,
-      WATER_DURATION_MS: 2000,
+      WATER_DURATION_MS: 5000,
       DAY_DURATION_MS: 60000,
       BASE_FIRE_SIZE_PX: 48,
       FIRE_SIZE_INCREMENT_PX: 20,
@@ -418,14 +418,16 @@
       fire: null,
       fireSpawnTimer: null,
       fireLevelUpTimer: null,
-      waterBucket: { active: false, startTime: null },
+      waterBucket: { active: false, startTime: null, usedTime: 0 },
       dragging: false,
       lastFrameTime: 0,
       paused: false,
       mouseX: 0,
       mouseY: 0,
       cursorOverFire: false,
-      lastMoveTime: Date.now()
+      lastMoveTime: Date.now(),
+      mouseMoving: false,
+      mouseMoveTimeout: null
     };
 
     // ========================================
@@ -716,14 +718,14 @@
     // ========================================
     function activateWaterBucket() {
       gameState.waterBucket.active = true;
-      gameState.waterBucket.startTime = Date.now();
+      gameState.waterBucket.usedTime = 0;
       document.body.classList.add('bucket-active');
       document.getElementById('customCursor').classList.add('active');
     }
 
     function deactivateWaterBucket() {
       gameState.waterBucket.active = false;
-      gameState.waterBucket.startTime = null;
+      gameState.waterBucket.usedTime = 0;
       document.body.classList.remove('bucket-active');
       document.getElementById('customCursor').classList.remove('active');
     }
@@ -734,9 +736,9 @@
       cursor.style.top = `${y}px`;
 
       // Check if water has run out
-      if (gameState.waterBucket.active && gameState.waterBucket.startTime) {
-        const elapsed = Date.now() - gameState.waterBucket.startTime;
-        const waterDepleted = elapsed >= CONFIG.WATER_DURATION_MS;
+      if (gameState.waterBucket.active) {
+        const usedTime = gameState.waterBucket.usedTime;
+        const waterDepleted = usedTime >= CONFIG.WATER_DURATION_MS;
 
         if (waterDepleted && gameState.dragging) {
           // Show REFILL! text when water runs out during drag
@@ -744,16 +746,23 @@
           cursor.style.fontSize = '20px';
           cursor.style.transform = 'translate(-50%, -50%) scale(1)';
         } else {
-          // Show bucket with scale based on water remaining
-          cursor.textContent = '🪣';
-          cursor.style.fontSize = '32px';
-          const progress = Math.max(0, 1 - elapsed / CONFIG.WATER_DURATION_MS);
+          // Show bucket with water drop when actively moving while dragging
+          if (gameState.dragging && gameState.mouseMoving) {
+            cursor.textContent = '💧🪣';
+          } else {
+            cursor.textContent = '🪣';
+          }
+          cursor.style.fontSize = '48px';
+          const progress = Math.max(0, 1 - usedTime / CONFIG.WATER_DURATION_MS);
           const scale = 0.5 + (progress * 0.5); // Scale from 100% to 50%
-          cursor.style.transform = `translate(-50%, -50%) scale(${scale})`;
+
+          // Add rotation when actively dragging
+          const rotation = (gameState.dragging && gameState.mouseMoving) ? 'rotate(-25deg)' : '';
+          cursor.style.transform = `translate(-50%, -50%) scale(${scale}) ${rotation}`;
         }
       } else {
         cursor.textContent = '🪣';
-        cursor.style.fontSize = '32px';
+        cursor.style.fontSize = '48px';
         cursor.style.transform = 'translate(-50%, -50%) scale(1)';
       }
     }
@@ -767,8 +776,7 @@
       if (!gameState.fire || !gameState.waterBucket.active || !gameState.dragging) return;
 
       // Check if water is depleted
-      const elapsed = Date.now() - gameState.waterBucket.startTime;
-      if (elapsed >= CONFIG.WATER_DURATION_MS) {
+      if (gameState.waterBucket.usedTime >= CONFIG.WATER_DURATION_MS) {
         return; // Water depleted, can't extinguish fire
       }
 
@@ -913,9 +921,8 @@
         activateWaterBucket();
       } else {
         // Check if water is depleted and refill
-        const elapsed = Date.now() - gameState.waterBucket.startTime;
-        if (elapsed >= CONFIG.WATER_DURATION_MS) {
-          gameState.waterBucket.startTime = Date.now(); // Refill
+        if (gameState.waterBucket.usedTime >= CONFIG.WATER_DURATION_MS) {
+          gameState.waterBucket.usedTime = 0; // Refill
         }
       }
       gameState.dragging = true;
@@ -925,6 +932,14 @@
     canvas.addEventListener('mousemove', (e) => {
       gameState.mouseX = e.clientX;
       gameState.mouseY = e.clientY;
+
+      // Set mouseMoving flag and clear after brief delay
+      gameState.mouseMoving = true;
+      clearTimeout(gameState.mouseMoveTimeout);
+      gameState.mouseMoveTimeout = setTimeout(() => {
+        gameState.mouseMoving = false;
+      }, 50);
+
       if (gameState.paused) return;
       updateCustomCursor(e.clientX, e.clientY);
       if (gameState.dragging) {
@@ -935,6 +950,14 @@
     window.addEventListener('mousemove', (e) => {
       gameState.mouseX = e.clientX;
       gameState.mouseY = e.clientY;
+
+      // Set mouseMoving flag and clear after brief delay
+      gameState.mouseMoving = true;
+      clearTimeout(gameState.mouseMoveTimeout);
+      gameState.mouseMoveTimeout = setTimeout(() => {
+        gameState.mouseMoving = false;
+      }, 50);
+
       updateCustomCursor(e.clientX, e.clientY);
     });
 
@@ -942,9 +965,8 @@
       gameState.dragging = false;
 
       // Deactivate bucket if water is depleted
-      if (gameState.waterBucket.active && gameState.waterBucket.startTime) {
-        const elapsed = Date.now() - gameState.waterBucket.startTime;
-        if (elapsed >= CONFIG.WATER_DURATION_MS) {
+      if (gameState.waterBucket.active) {
+        if (gameState.waterBucket.usedTime >= CONFIG.WATER_DURATION_MS) {
           deactivateWaterBucket();
         }
       }
@@ -1001,6 +1023,12 @@
 
       if (!gameState.paused) {
         updateTimer(deltaTime);
+
+        // Track water usage only when moving
+        if (gameState.waterBucket.active && gameState.dragging && gameState.mouseMoving) {
+          gameState.waterBucket.usedTime += deltaTime;
+        }
+
         checkWaterBucketExpiry();
 
         // Update cursor scale continuously while bucket is active
